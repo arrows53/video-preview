@@ -15,10 +15,10 @@ bunny.x = app.screen.width / 2;
 bunny.y = app.screen.height / 2;
 
 app.stage.addChild(bunny);
-
+//test edit
 app.ticker.add(() => {
     // just for fun, let's rotate mr rabbit a little
-    bunny.rotation += 0.1; });
+    bunny.rotation += 0.1; }); 
 
 export default app    
 
