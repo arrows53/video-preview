@@ -25,8 +25,7 @@ class VideoPreview extends React.Component {
         
         // //add event listener for window resize
         var display_area = document.getElementById("preview_area");
-        window.addEventListener('resize', this.updateDimensions.bind(this, 'testCanvas'));
-        window.addEventListener('resize', this.updateDimensions.bind(this, 'testCanvas1'));
+        window.addEventListener('resize', this.updateDimensions.bind(this, 'canvas'));
 
         var barData = [ { time_start:10, 
             time_end:40, 
@@ -49,8 +48,7 @@ class VideoPreview extends React.Component {
             // for some reason, we need to wait a little longer still...
             window.setTimeout(() => {
 
-                this.createCanvasOverlay('rgba(0,0,0,0)', display_area, 'testCanvas');
-                this.createCanvasOverlay('rgba(0,0,0,0)', display_area, 'testCanvas1');    
+                this.createCanvasOverlay('rgba(0,0,0,0)', display_area, 'canvas');
                 drawBars();
             }, 200);
 
