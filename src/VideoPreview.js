@@ -1,9 +1,6 @@
 import React from 'react';
-
-import VideoData from './VideoData';
 import video from './BackgroundRaw.mp4'
-
-import {drawBars} from './canvas-anim.js'
+import {drawBars} from './canvas-anim-v3.js'
 
 
 class VideoPreview extends React.Component {
@@ -27,33 +24,13 @@ class VideoPreview extends React.Component {
         var display_area = document.getElementById("preview_area");
         window.addEventListener('resize', this.updateDimensions.bind(this, 'canvas'));
 
-        var barData = [ { time_start:10, 
-            time_end:40, 
-            time_out:160, 
-            speed_multiple:4,
-            h_position:0,
-            x_number:13,
-            y_number:47},        
-
-            { time_start:204, 
-            time_end:230, 
-            time_out:400, 
-            speed_multiple:4,
-            h_position:0,
-            x_number:13,
-            y_number:67}];
-
-
         document.fonts.ready.then(() => {
             // for some reason, we need to wait a little longer still...
             window.setTimeout(() => {
-
                 this.createCanvasOverlay('rgba(0,0,0,0)', display_area, 'canvas');
                 drawBars();
             }, 200);
-
         });
-            
     }
     
     //    update the overlay canvas to accommodate resizing
@@ -96,7 +73,6 @@ class VideoPreview extends React.Component {
         // // context.backgroundColor = 'transparent';
         // context.restore()
     
-        canvasContainer.globalAlpha=0.5;
         canvasContainer.appendChild(myCanvas);
 
 
