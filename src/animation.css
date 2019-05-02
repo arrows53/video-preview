@@ -1,0 +1,56 @@
+
+.move-me {
+  display: inline-block;
+  padding: 0px;
+  /* color: white; */
+  position: relative;
+  margin: 0 0 10px 0;
+}
+.move-me-1 {
+  animation: move-in-steps 2s infinite;
+}
+
+/* .move-me-2 {
+  animation: move-in-steps 8s steps(4, start) infinite;
+}
+.move-me-3 {
+  animation: move-in-steps 8s infinite;
+} */
+
+body {
+  padding: 20px;
+}
+
+@keyframes move-in-steps {
+  0% {
+    left: 0;
+    width:0;
+    background: blue;
+  }
+  10% {
+    left: 0;
+    width:0;
+    background: blue;
+  }
+  30% {
+    left: 0;
+    width:500;
+    background: blue;
+  }
+  60% {
+    left: 0;
+    width:500;
+
+    background: blue;
+  }
+  70% {
+    left: 500;
+    width:0;
+    background: blue;
+  }  
+  100% {
+    left: 500;
+    width:0;
+    background: blue;
+  }   
+}
