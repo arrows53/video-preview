@@ -5,6 +5,12 @@ import React from 'react';
 import video from './RenderedDemo.mp4'
 
 class RenderedVideo extends React.Component {
+    componentDidMount () {
+        console.log('ok')
+        this.check = 'ok'
+    }
+    
+    
     render() {
         return (
             <div className="right-border-line manufacturer-panel">
@@ -13,8 +19,8 @@ class RenderedVideo extends React.Component {
                 <div className="video-container">
                     <div className="aspect-ratio-fixer">
                         <div className="use-aspect-ratio">
-                            <video id='rendered_demo' controls autoPlay loop>
-                                <source src={video} type="video/mp4" />
+                            <video controls autoPlay loop>
+                                <source id="RenderedVideo" src={video} type="video/mp4" />
                             </video>
                         </div>
                     </div>
