@@ -1,11 +1,9 @@
 import React from 'react';
 
-// import VideoData from './VideoData';
 import AnimationData from './AnimationData'
 import * as PIXI from 'pixi.js'
 import BackgroundRaw from './BackgroundRaw.mp4'
 import VideoData from './VideoData'
-// import * as MS from 'pixi-multistyle-text'
 
 class VideoPreview extends React.Component {
     componentDidMount() {
@@ -122,8 +120,9 @@ class VideoPreview extends React.Component {
             count += sync_unit;
 
             if (count > VideoData.duration){
-                videoSprite.texture.baseTexture.resource.source.currentTime = 0;
-                videoSprite.texture.baseTexture.resource.source.play();
+                //sometimes needs baseTexture.source, sometimes needs baseTexture.resource
+                videoSprite.texture.baseTexture.source.currentTime = 0;
+                videoSprite.texture.baseTexture.source.play();
                 count = 0;
             }
             
