@@ -89,11 +89,9 @@ class VideoPreview extends React.Component {
         }        
         
         //The sync_unit value is use to sync the sequence 'frame' duration in 
-        //VideoData with the animate() iteration increments.  Since all preview elements 
-        //use this timing increment, preview elements are always in sync with one another.
-        //There does seem to be an issue with the page rendering at different speeds,
-        //causing syncing issues between the preview and render versions.  In this case,
-        //a sync_unit value of 35 seems to sync the two videos again.
+        //VideoData with the animate() iteration increments.  This multiple needs to change to 
+        //accommodate the variation in playback performance.  This should be replaced with 
+        //app.ticker.add()
         var sync_unit = 42.3;
         // var sync_unit = 35;
         
@@ -115,7 +113,6 @@ class VideoPreview extends React.Component {
                 count = 0;
             }
             
-
             //bar animation done with reveal start/end and scrub start/end time values
             for (let i =0; i < AnimationData.bars.length; i++){
                 let current_bar = AnimationData.bars[i];        
@@ -123,8 +120,7 @@ class VideoPreview extends React.Component {
                 let bar_scrub_duration = current_bar.scrub_end - current_bar.scrub_start;                    
                 
                 //bar animation
-                if (count > current_bar.reveal_start){
-                    
+                if (count > current_bar.reveal_start){                    
                     let bar_reveal_percent = (count - current_bar.reveal_start) / bar_reveal_duration;
                     let active_width = bar_reveal_percent*current_bar.width
                     
