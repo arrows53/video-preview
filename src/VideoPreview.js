@@ -7,8 +7,6 @@ import VideoData from './VideoData'
 
 class VideoPreview extends React.Component {
     componentDidMount() {
-        //start timer
-        this.interval = setInterval(() => this.setState({ time: Date.now() }), 1000);       
 
         const app = new PIXI.Application({
             width: 1920, 
@@ -18,27 +16,48 @@ class VideoPreview extends React.Component {
             view: this.refs.canvas
         });
 
-        //Bar colors - normalize and convert to hex 
+        //start renderer
+        var renderer = PIXI.autoDetectRenderer(1920,1080,{ antialias: false });
+        var stage = new PIXI.Container();
+        
+        //background video setup
+        var texture = PIXI.Texture.from(BackgroundRaw);
+        var videoSprite = new PIXI.Sprite(texture);
+        videoSprite.width = app.screen.width;
+        videoSprite.height = app.screen.height;
+        app.stage.addChild(videoSprite);
+
+        //Setup the graphics objects for the animated bars
+        var thing = new PIXI.Graphics();
+        var thing_mask = new PIXI.Graphics();
+        app.stage.addChild(thing);       
+        app.stage.addChild(thing_mask);  
+        
+        //Aniamted bar colors
         var rgb = VideoData.text_background_color;
         var rgb_n = [rgb[0]/255, rgb[1]/255, rgb[2]/255, rgb[3]/255]
         var color = PIXI.utils.rgb2hex(rgb_n); 
 
+        //Text colors
         rgb = VideoData.highlight_color;
         rgb_n = [rgb[0]/255, rgb[1]/255, rgb[2]/255, rgb[3]/255]
         var text_highlight_color = PIXI.utils.rgb2hex(rgb_n);
         var text_color = PIXI.utils.rgb2hex([1,1,1,0]);
 
+        //dual-style-text is done by stacking two text elements.  Text not belonging
+        //to a layer's text style is replaced with whitespace.  This works better for monospace
+        //fonts.  Better solutions, like pixi-multistyle-text should be considered here.
+        var text_styles = [] //0 is standard text style, 1 is highlight
+        for (let i = 0; i < 2; i++){
+            text_styles.push(new PIXI.TextStyle({
+                fontFamily: VideoData.font,
+                fontSize: 83,
+                dropShadowColor: 'black',
+                dropShadow:true,
+                dropShadowDistance:1,
+                letterSpacing:1
+            }))};
 
-        //video setup
-        var texture = PIXI.Texture.from(BackgroundRaw);
-        var videoSprite = new PIXI.Sprite(texture);
-        videoSprite.width = app.screen.width;
-        videoSprite.height = app.screen.height;
-        videoSprite.resolution = 1920;        
-        app.stage.addChild(videoSprite);
-
-
-        //text setup
         function MakeWhitespace(text, StartIndex, EndIndex){
             let whitespace = " "
             for (let i = StartIndex; i < EndIndex; i++){
@@ -47,78 +66,48 @@ class VideoPreview extends React.Component {
             return text.substr(0, StartIndex) + whitespace + text.substr(EndIndex);
         }
 
-
-
-        const style = new PIXI.TextStyle({
-            fontFamily: VideoData.font,
-            fontSize: 83,
-            // fill: text_color,
-            dropShadowColor: 'black',
-            dropShadow:true,
-            dropShadowDistance:1,
-            letterSpacing:1
-            
-        });
-        const highlight_style = new PIXI.TextStyle({
-            fontFamily: VideoData.font,
-            fontSize: 83,
-            // fill: text_highlight_color,
-            dropShadowColor: 'black',
-            dropShadow:true,
-            dropShadowDistance:1,
-            letterSpacing:1
-        });
-
-
+        //format the text elements so that they only include their respective characters.
         var text_elements = []
         for (let i =0; i < VideoData.text.length; i++){
             text_elements[i] = []
-
             let indexes = VideoData.text[i].keyword_indexes;
             
-            
+            //set properties of highlighted text
             let highlight_text = VideoData.text[i].content.substring(0, indexes[1]);
             highlight_text = MakeWhitespace(highlight_text, 0, indexes[0]);
-            text_elements[i].push(new PIXI.Text(highlight_text, highlight_style));
+            text_elements[i].push(new PIXI.Text(highlight_text, text_styles[1]));
             text_elements[i][0].position.y = AnimationData.text[i].y_pos;
             text_elements[i][0].position.x = AnimationData.text[i].highlight_x_pos;
             text_elements[i][0].style.fill = text_highlight_color;
             
+            //set properties of plain text
             let whitespace_text = MakeWhitespace(VideoData.text[i].content, indexes[0], indexes[1]);
-            text_elements[i].push(new PIXI.Text(whitespace_text, style));
+            text_elements[i].push(new PIXI.Text(whitespace_text, text_styles[0]));
             text_elements[i][1].position.y = AnimationData.text[i].y_pos;
             text_elements[i][1].position.x = 88;
             text_elements[i][1].style.fill = text_color;
         }        
         
-
-        // run the render loop
-        var renderer = PIXI.autoDetectRenderer(1920,1080,{ antialias: false });
-        var stage = new PIXI.Container();
-        var count = 0;
-        var thing = new PIXI.Graphics();
-        var thing_mask = new PIXI.Graphics();
-
-        // PIXI.settings.PRECISION_FRAGMENT = 'highp';
-
-        //The additive value is use to sync the sequence 'frame' length in 
-        //VideoData with the counter increments.  This keeps all the elements in
-        //time with one another, but for some reason changes between these two values.
-         
-        var sync_unit = 16.3;
+        //The sync_unit value is use to sync the sequence 'frame' duration in 
+        //VideoData with the animate() iteration increments.  Since all preview elements 
+        //use this timing increment, preview elements are always in sync with one another.
+        //There does seem to be an issue with the page rendering at different speeds,
+        //causing syncing issues between the preview and render versions.  In this case,
+        //a sync_unit value of 35 seems to sync the two videos again.
+        var sync_unit = 42.3;
         // var sync_unit = 35;
-
-        app.stage.addChild(thing);       
-
-
+        
+        
+        
+        var count = 0;
         animate();
         function animate() {
+            count += sync_unit;
 
             thing.clear();
             thing_mask.clear();
 
-            count += sync_unit;
-
+            //trigger video repeat
             if (count > VideoData.duration){
                 //sometimes needs baseTexture.source, sometimes needs baseTexture.resource
                 videoSprite.texture.baseTexture.source.currentTime = 0;
@@ -127,10 +116,7 @@ class VideoPreview extends React.Component {
             }
             
 
-
-
-
-
+            //bar animation done with reveal start/end and scrub start/end time values
             for (let i =0; i < AnimationData.bars.length; i++){
                 let current_bar = AnimationData.bars[i];        
                 let bar_reveal_duration = current_bar.reveal_end - current_bar.reveal_start;
@@ -138,21 +124,24 @@ class VideoPreview extends React.Component {
                 
                 //bar animation
                 if (count > current_bar.reveal_start){
-                    let bar_count = count - current_bar.reveal_start;
-                    let bar_reveal_percent = bar_count / bar_reveal_duration;
+                    
+                    let bar_reveal_percent = (count - current_bar.reveal_start) / bar_reveal_duration;
                     let active_width = bar_reveal_percent*current_bar.width
                     
                     thing.position.x = 80;
                     thing_mask.position.x = 80;
                     
+                    //reveal transition
                     if (count < current_bar.reveal_end){
                         active_width = bar_reveal_percent*current_bar.width;
                     }
                     
+                    //static placement
                     if (count > current_bar.reveal_end){
                         active_width = current_bar.width;
                     }
                     
+                    //scrub transition
                     if (count > current_bar.scrub_start){
                         let bar_scrub_percent = (count - current_bar.scrub_start) / bar_scrub_duration;                    
                         // console.log(bar_scrub_percent)
@@ -166,59 +155,39 @@ class VideoPreview extends React.Component {
                     thing.lineTo(active_width, current_bar.y_pos);
                     thing.endFill();        
                     
-                    // thing_mask.position.y = 0;
-
                     thing_mask.lineStyle(90, String(text_highlight_color), 1);
                     thing_mask.moveTo(0,current_bar.y_pos); 
                     thing_mask.lineTo(active_width, current_bar.y_pos);
                     thing_mask.endFill();                            
-                    
-                    
-
                 }
             }
+
+
+            //text animation
             for (let i =0; i < VideoData.text.length; i++){
                 let current_text = AnimationData.text[i];
                 let text_count = Math.max(count - current_text.reveal_start, 0);
                 let text_reveal_duration = current_text.reveal_end - current_text.reveal_start;
                 let text_reveal_percent = Math.min((text_count / text_reveal_duration), 1);
                 
-                if (count > AnimationData.text[i].reveal_start){
-                    
+                if (count > AnimationData.text[i].reveal_start){                    
                     if (count < AnimationData.text[i].reveal_end){
-                        text_elements[i][0].alpha = text_reveal_percent;
-                        text_elements[i][0].mask = thing_mask;
-
-                        text_elements[i][1].alpha = text_reveal_percent;
-                        text_elements[i][1].mask = thing_mask;
-                        
-                        text_elements[i][0].position.y = AnimationData.text[i].y_pos - ((1-text_reveal_percent)*-5)
-                        text_elements[i][1].position.y = AnimationData.text[i].y_pos - ((1-text_reveal_percent)*-5)
-
-                        app.stage.addChild(text_elements[i][0]);
-                        app.stage.addChild(text_elements[i][1]);
-
+                        for (let j = 0; j < text_elements[i].length; j++){
+                            text_elements[i][j].alpha = text_reveal_percent;
+                            text_elements[i][j].mask = thing_mask;
+                            text_elements[i][j].position.y = AnimationData.text[i].y_pos - ((1-text_reveal_percent)*-5)
+                            app.stage.addChild(text_elements[i][j]);
+                        }
                     }
                     if (count > AnimationData.text[i].hide){
                         app.stage.removeChild(text_elements[i][0]);
                         app.stage.removeChild(text_elements[i][1]);
                     }
-                    
-                    
-                    
-                    
                 }
             }        
-            
             renderer.render(stage);
-            app.stage.addChild(thing_mask);       
-
             requestAnimationFrame( animate );
         }
-
-
-
-
     }
 
     render() 
@@ -232,7 +201,6 @@ class VideoPreview extends React.Component {
                 <div className="video-container">
                     <div className="aspect-ratio-fixer">
                         <div className="use-aspect-ratio">
-                            {/* <video id="PreviewVideo" src={BackgroundRaw} autoPlay /> */}
                             <canvas ref="canvas" />
                         </div>
                     </div>
